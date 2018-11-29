@@ -21,6 +21,13 @@ class PrimitiveTree(gp.PrimitiveTree):
         else:
             return sp.printing.latex(sp.expand(self.__str__(), deep))
 
+    def sympy(self, subs_params=True, decimals=3):
+        if subs_params:
+            subs = {key: np.around(val, decimals) for key, val in self.parameters.items()}
+            return sp.expand(self.__str__()).subs(subs)
+        else:
+            return sp.expand(self.__str__())
+
     def __str__(self):
         return super().__str__().replace("'", '').replace('"', '')
 
