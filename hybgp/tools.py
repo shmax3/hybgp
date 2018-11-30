@@ -9,9 +9,9 @@ def train_test_split(X, y, n_split):
     :param n_split: Number of same sections for train-test spliting. This
     number must be greater than 1 and less than len(y).
 
-    >>> train_test_split((np.array([1, 2]),), np.array([3, 4], 2))
-    ((np.array([1], ), (np.array([2]),) np.array([4]), np.array([5]))
-    >>> train_test_split((np.array([1, 2, 3]),), np.array([4, 5, 6], 3))
+    >>> train_test_split((np.array([1, 2]),), np.array([3, 4]), 2)
+    ((np.array([1], ), (np.array([2]),) np.array([3]), np.array([4]))
+    >>> train_test_split((np.array([1, 2, 3]),), np.array([4, 5, 6]), 3)
     ((np.array([1, 3], ), (np.array([2]),) np.array([4, 6]), np.array([5]))
 
     :return: tuple with (X_train, X_test, y_train, y_test)
