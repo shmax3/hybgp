@@ -16,6 +16,10 @@ def mse(params, func, args, target, sigma2=1):
     return (np.square(val - target) / sigma2).mean()
 
 
+def chi2(y_pred, y_true, sigma2):
+    return (np.square(y_pred - y_true) / sigma2).mean()
+
+
 def parameters_num(params, func):
     """Calculate the number of parameters of *func* function
 

@@ -1,4 +1,12 @@
 import numpy as np
+import deap
+
+
+class HallOfFame(deap.tools.HallOfFame):
+
+    def insert(self, item):
+        print(str(item))
+        super().insert(item)
 
 
 def train_test_split(X, y, n_split):

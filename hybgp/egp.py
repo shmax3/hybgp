@@ -54,69 +54,6 @@ class PrimitiveTree(gp.PrimitiveTree):
         else:
             return sp.expand(self.__str__())
 
-    def __str__(self):
-        """Return an expression in a human readable string.
-        """
-        return super().__str__().replace("'", '').replace('"', '')
-
-
-class PrimitiveSet(gp.PrimitiveSet):
-    """Interface of the class same as :class:`~deap.gp.PrimitiveSet`, except
-    some methods. It doesn't have addPrimitive method. You must use addOperator,
-    addEphemeralConstant and addFunction instead.
-    """
-    def __init__(self, name):
-        super().__init__(name, 0)
-        self.variables = []
-
-    def addOperator(self, operator, arity, name):
-        """You must use it for appending operators which could be in an
-        expression. It is a kind of primitives and its name are used for
-        parsing the text of an ephemeral constant to single python function.
-
-        :param operator: It could be +, -, exp, etc.
-        :param arity: The number of arguments of the operator.
-        :param name: str with name
-        """
-        super().addPrimitive(operator, arity, name)
-
-    def addFunction(self, func, name):
-        """You must use it for appending function which could be in some
-        ephemeral constant. It is not a kind of primitives and it is not
-        used for creating a new node of a PrimitiveTree, but its name is used
-        for parsing ephemeral constant to single python function
-
-        :param func: It could be +, -, exp, etc:
-        :param name str with name:
-        """
-        self.context[name] = func
-
-    def new_var(self):
-        """It creates a new name for variable which could be met in ephemeral
-        constant.
-
-        :return: str with the new name for variable like x123
-        """
-        var = new_var()
-        self.variables.append(var)
-        return var
-
-    @staticmethod
-    def new_const():
-        """It creates a new name for constant which could be met in ephemeral
-        constant.
-
-        :return: str with the new name for constant like c123
-        """
-        return new_const()
-
-    @property
-    def var_num(self):
-        """
-        :return: Number of generated variables
-        """
-        return len(self.variables)
-
 
 def compile(expr, pset):
     """Compile the expression *expr*.
