@@ -4,14 +4,18 @@ build a Genetic Program Tree, and the functions to evaluate it.
 This module support GP with intermediate numerical optimization of float
 parameters of individuals.
 """
+import sys
 import re
+import random
 import itertools
+from inspect import isclass
 
 import sympy as sp
 import numpy as np
 from deap import gp
 
-from .generators import new_var, new_const
+from .operators import add, mul
+from .types import Const, Var, Weighted, WSed
 
 
 class PrimitiveTree(gp.PrimitiveTree):
@@ -68,5 +72,79 @@ def compile(expr, pset):
     """
     code = str(expr)
     constants = set(re.findall(r"c[1-9][0-9]*", code))
-    args = ",".join(itertools.chain(constants, pset.variables))
+    args = ",".join(itertools.chain(constants, pset.arguments))
     return eval(f"lambda {args}: {code}", pset.context, {})
+
+
+def full_depth_condition(height, depth, type_):
+    return height < depth + {WSed: 3, Weighted: 2}.get(type_, 1)
+
+
+def generate(pset, min_, max_, condition=full_depth_condition, type_=None):
+    """Generate a Tree as a list of Primitives. The tree is build
+    from the root to the leaves, and it stop growing when the
+    condition is fulfilled.
+    :param pset: Primitive set from which primitives are selected.
+    :param min_: Minimum height of the produced trees.
+    :param max_: Maximum Height of the produced trees.
+    :param condition: The condition is a function that takes two arguments,
+                      the height of the tree to build and the current
+                      depth in the tree: condition(height, depth).
+    :param type_: The type that should return the tree when called, when
+                  :obj:`None` (default) the type of :pset: (pset.ret)
+                  is assumed.
+    :returns: A grown tree with leaves at possibly different depths
+              dependending on the condition function.
+    """
+    type_ = type_ or pset.ret
+    expr = []
+    height = random.randint(min_, max_)
+    stack = [(0, type_)]
+    try:
+        while len(stack) != 0:
+            depth, type_ = stack.pop()
+            if condition(height, depth, type_):
+                if issubclass(type_, WSed):
+                    expr.append(gp.Primitive(add.__name__,
+                                             [Weighted, Const],
+                                             WSed))
+                    expr.append(gp.Primitive(mul.__name__,
+                                             [Const, Var],
+                                             Weighted))
+                    expr.append(Const())
+                    expr.append(random.choice(pset.terminals[Var]))
+                    expr.append(Const())
+                elif issubclass(type_, Weighted):
+                    expr.append(gp.Primitive(mul.__name__, [Const, Var], Weighted))
+                    expr.append(Const())
+                    expr.append(random.choice(pset.terminals[Var]))
+                elif issubclass(type_, Const):
+                    expr.append(Const())
+                else:
+                    term = random.choice(pset.terminals[Var])
+                    if isclass(term):
+                        term = term()
+                    expr.append(term)
+            else:
+                if issubclass(type_, Const):
+                    expr.append(Const())
+                elif issubclass(type_, Var):
+                    prim_oper = random.choice(pset.primitives[type_])
+                    prim_term = random.choice(pset.terminals[type_])
+                    if random.random() > .5:
+                        expr.append(prim_oper)
+                        for arg in reversed(prim_oper.args):
+                            stack.append((depth+1, arg))
+                    else:
+                        expr.append(prim_term)
+                else:
+                    prim = random.choice(pset.primitives[type_])
+                    expr.append(prim)
+                    for arg in reversed(prim.args):
+                        stack.append((depth+1, arg))
+    except IndexError:
+        _, _, traceback = sys.exc_info()
+        raise IndexError("The gp.generate function tried to add "
+                         "an entity of type '%s', but there is "
+                         "none available." % (type_,), traceback)
+    return expr
